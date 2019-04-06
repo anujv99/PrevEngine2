@@ -1,6 +1,7 @@
 #pragma once
 
-#include "engine/window.h"
+#include "engine/events/event.h"
+#include "engine/events/applicationevent.h"
 
 namespace prev {
 
@@ -10,8 +11,11 @@ namespace prev {
 		~Application();
 	public:
 		void Run();
-	private:
-		Window * m_Window = nullptr;
+		void EventCallbackFunc(Event & e);
+		bool WindowCloseFunc(WindowCloseEvent & e);
+	public:
+		bool IsAppReady = true;
+		bool IsAppRunning = true;
 	};
 
 }

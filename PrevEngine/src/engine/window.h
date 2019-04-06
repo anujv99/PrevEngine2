@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <functional>
 
 namespace prev {
 
@@ -16,7 +17,8 @@ namespace prev {
 	class Window {
 	public:
 		~Window() { };
-		virtual bool Update() = 0;
+		virtual void Update() = 0;
+		virtual void SetEventCallbackFunc(std::function<void(Event & e)>) = 0;
 	protected:
 		Window() { };
 	public:

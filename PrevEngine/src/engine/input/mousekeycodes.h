@@ -1,0 +1,10 @@
+#pragma once
+
+#define PV_MOUSE_BUTTON_LEFT	0x01
+#define PV_MOUSE_BUTTON_MIDDLE	0x02
+#define PV_MOUSE_BUTTON_RIGHT	0x04
+#define PV_MOUSE_BUTTON_1		0x01
+#define PV_MOUSE_BUTTON_2		0x02
+#define PV_MOUSE_BUTTON_3		0x04
+#define PV_MOUSE_BUTTON_4		0x10
+#define PV_MOUSE_BUTTON_5		0x20

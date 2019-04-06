@@ -2,6 +2,10 @@
 
 #include "event.h"
 
+#include <sstream>
+#include <string>
+#include <functional>
+
 namespace prev {
 
 	class WindowResizeEvent : public Event {

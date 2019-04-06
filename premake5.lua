@@ -36,6 +36,7 @@ workspace "PrevEngine"
 		location "PrevEngine"
 		kind "StaticLib"
 		language "C++"
+		cppdialect "C++17"
 		
 		targetdir ("bin/" .. outputDir .. "%{prj.name}")
 		objdir ("bin-int/" .. outputDir .. "%{prj.name}")
@@ -71,7 +72,6 @@ workspace "PrevEngine"
 		end
 		
 		filter "system:windows"
-        cppdialect "C++17"
         staticruntime "On"
         systemversion "latest"
 		
@@ -108,6 +108,7 @@ workspace "PrevEngine"
 		location "Sandbox"
 		kind "WindowedApp"
 		language "C++"
+		cppdialect "C++17"
 	
 		targetdir ("bin/" .. outputDir .. "%{prj.name}")
 		objdir ("bin-int/" .. outputDir .. "%{prj.name}")
@@ -119,7 +120,7 @@ workspace "PrevEngine"
 		
 		includedirs {
 			"%{prj.name}/src",
-			"PrevEngine"
+			"PrevEngine/src"
 		}
 		
 		defines {
