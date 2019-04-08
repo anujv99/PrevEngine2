@@ -12,6 +12,7 @@ namespace prev {
 
 		virtual void Update() override;
 		virtual void SetEventCallbackFunc(std::function<void(Event &)> func) override;
+		virtual void * GetRawPointer() override { return (void *)m_Data.HWnd; }
 	private:
 		bool RegisterWindowClass();
 		bool CreateAndShowWindow();

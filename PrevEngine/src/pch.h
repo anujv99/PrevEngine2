@@ -46,7 +46,13 @@
 #define STRICT
 
 #include <Windows.h>
+#include <wrl.h>
 //
+
+//DirectX11 Stuff
+#include <d3d11.h>
+#include <d3dcompiler.h>
+#include <dxgi.h>
 
 // STL Stuff
 #include <iostream>
@@ -71,7 +77,10 @@
 #include "engine/essentials/log.h"
 
 //Events
-#include <engine/events/event.h>
-#include <engine/events/applicationevent.h>
-#include <engine/events/keyevent.h>
-#include <engine/events/mouseevent.h>
+#include "engine/events/event.h"
+#include "engine/events/applicationevent.h"
+#include "engine/events/keyevent.h"
+#include "engine/events/mouseevent.h"
+
+//Layer
+#include "engine/layer/layerstack.h"

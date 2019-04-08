@@ -37,6 +37,7 @@ workspace "PrevEngine"
 		kind "StaticLib"
 		language "C++"
 		cppdialect "C++17"
+		staticruntime "on"
 		
 		targetdir ("bin/" .. outputDir .. "%{prj.name}")
 		objdir ("bin-int/" .. outputDir .. "%{prj.name}")
@@ -72,8 +73,7 @@ workspace "PrevEngine"
 		end
 		
 		filter "system:windows"
-        staticruntime "On"
-        systemversion "latest"
+			systemversion "latest"
 		
         defines {
 			renderingAPI,
@@ -83,10 +83,6 @@ workspace "PrevEngine"
 			"_CRT_SECURE_NO_WARNINGS"
 		}
 		
-		removefiles {
-			"%{prj.name}/src/platform/linux/*",
-		}
-		
 		pchheader "pch.h"
 		
 		filter "action:vs*"
@@ -94,21 +90,26 @@ workspace "PrevEngine"
 			
 		filter "configurations:Debug"
 			defines {"PV_DEBUG"}
-			symbols "On"
+			runtime "Debug"
+			symbols "on"
+			
 	
 		filter "configurations:Release"
 			defines {"PV_RELEASE"}
-			optimize "On"
+			runtime "Release"
+			optimize "on"
 	
 		filter "configurations:Distribute"
 			defines {"PV_DIST"}
-			optimize "On"
+			runtime "Release"
+			optimize "on"
 		
 	project "Sandbox"
 		location "Sandbox"
 		kind "WindowedApp"
 		language "C++"
 		cppdialect "C++17"
+		staticruntime "on"
 	
 		targetdir ("bin/" .. outputDir .. "%{prj.name}")
 		objdir ("bin-int/" .. outputDir .. "%{prj.name}")
@@ -132,10 +133,16 @@ workspace "PrevEngine"
 		}
 		
 		filter "configurations:Debug"
-			symbols "On"
+			defines {"PV_DEBUG"}
+			runtime "Debug"
+			symbols "on"
 	
 		filter "configurations:Release"
-			optimize "On"
+			defines {"PV_RELEASE"}
+			runtime "Release"
+			optimize "on"
 	
 		filter "configurations:Distribute"
-			optimize "On"
+			defines {"PV_DIST"}
+			runtime "Release"
+			optimize "on"

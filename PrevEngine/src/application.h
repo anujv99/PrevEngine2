@@ -2,6 +2,7 @@
 
 #include "engine/events/event.h"
 #include "engine/events/applicationevent.h"
+#include "engine/layer/layerstack.h"
 
 namespace prev {
 
@@ -16,6 +17,8 @@ namespace prev {
 	public:
 		bool IsAppReady = true;
 		bool IsAppRunning = true;
+	private:
+		LayerStack m_LayerStack;
 	};
 
 }
