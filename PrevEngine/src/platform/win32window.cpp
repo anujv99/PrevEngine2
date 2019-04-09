@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "win32window.h"
 
+#ifdef PV_WINDOWING_API_WIN32
+
 #include "engine/input/mousekeycodes.h"
 
 namespace prev {
@@ -241,3 +243,5 @@ namespace prev {
 	}
 
 }
+
+#endif

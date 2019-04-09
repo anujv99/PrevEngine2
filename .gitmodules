@@ -1,0 +1,3 @@
+[submodule "PrevEngine/vendor/glfw"]
+	path = PrevEngine/vendor/glfw
+	url = https://github.com/preversewharf45/glfw

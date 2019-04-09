@@ -19,7 +19,8 @@ namespace prev {
 		}
 
 		GraphicsDesc graphicsDesc(winDesc.Width, winDesc.Height);
-		s_GraphicsAPI = GraphicsApi::UseDirectX(s_Window->GetRawPointer(), s_Window->m_WindowAPI, graphicsDesc);
+		graphicsDesc.Vsync = false;
+		s_GraphicsAPI = GraphicsApi::UseOpenGL(s_Window->GetRawPointer(), s_Window->m_WindowAPI, graphicsDesc);
 		if (s_GraphicsAPI == nullptr) {
 			IsAppReady = false;
 			return;

@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "directxapi.h"
 
+#include "api/glfwhwnd.h"
+
 #define CHECK_AND_POST_ERROR(hr, string, ...) { if (FAILED(hr)) { PV_POST_ERROR(string); __VA_ARGS__; return false; }}
 
 namespace prev {
@@ -20,13 +22,13 @@ namespace prev {
 	DirectXAPI::DirectXAPI(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc) {
 		m_Data.Width		= graphicsDesc.Width;
 		m_Data.Height		= graphicsDesc.Height;
-		m_Data.Vsync		= graphicsDesc.Height;
+		m_Data.Vsync		= graphicsDesc.Vsync;
 		m_Data.Fullscreen	= graphicsDesc.Fullscreen;
 		
 		if (windowApi == WindowAPI::WINDOWING_API_WIN32) {
 			m_Data.HWnd = (HWND)windowRawPointer;
 		} else if (windowApi == WindowAPI::WINDOWING_API_GLFW) {
-			throw std::logic_error("Implement this");
+			m_Data.HWnd = GetHWNDFromGLFW(windowRawPointer);
 		}
 
 		m_Status = CheckVideoAdapter();

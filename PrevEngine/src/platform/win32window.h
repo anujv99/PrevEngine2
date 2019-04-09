@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef PV_WINDOWING_API_WIN32
+
 #include "engine/window.h"
 
 namespace prev {
@@ -41,3 +43,5 @@ namespace prev {
 	};
 
 }
+
+#endif

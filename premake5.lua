@@ -11,6 +11,8 @@ workspace "PrevEngine"
 	outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/"
 	
 	IncludeDir = {}
+	IncludeDir["glfw"] = "PrevEngine/vendor/glfw/include"
+	IncludeDir["glad"] = "PrevEngine/vendor/glad/include"
 	
 	--[[
 	Windowing API supprted  | windowingAPI
@@ -22,6 +24,10 @@ workspace "PrevEngine"
 	]]--
 	windowingAPI = "PV_WINDOWING_API_WIN32"
 	
+	if (windowingAPI == "PV_WINDOWING_API_GLFW" or windowingAPI == "PV_WINDOWING_API_BOTH") then
+		include "PrevEngine/vendor/glfw"
+	end
+	
 	--[[
 	Rendering API supported	 | renderingAPI
 	---------------------------------------
@@ -30,7 +36,11 @@ workspace "PrevEngine"
 	
 	To Compile both use 	 | PV_RENDERING_API_BOTH
 	]]--
-	renderingAPI = "PV_RENDERING_API_DIRECTX"
+	renderingAPI = "PV_RENDERING_API_OPENGL"
+	
+	if (renderingAPI == "PV_RENDERING_API_OPENGL" or renderingAPI == "PV_RENDERING_API_BOTH") then
+		include "PrevEngine/vendor/glad"
+	end
 	
 	project "PrevEngine"
 		location "PrevEngine"
@@ -51,9 +61,27 @@ workspace "PrevEngine"
 			"%{prj.name}/src",
 		}
 		
+		if (windowingAPI == "PV_WINDOWING_API_GLFW" or windowingAPI == "PV_WINDOWING_API_BOTH") then
+			includedirs {
+				"%{IncludeDir.glfw}"
+			}
+			
+			links {
+				"GLFW"
+			}
+		end
+		
 		if (renderingAPI == "PV_RENDERING_API_OPENGL") then
 			links {
 				"opengl32.lib"
+			}
+			
+			includedirs {
+				"%{IncludeDir.glad}"
+			}
+			
+			links {
+				"glad"
 			}
 		elseif (renderingAPI == "PV_RENDERING_API_DIRECTX") then
 			links {

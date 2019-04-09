@@ -24,6 +24,7 @@ namespace prev {
 	public:
 		// To get window raw pointer use GetRawPointer method in Window class
 		static GraphicsApi * UseDirectX(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc);
+		static GraphicsApi * UseOpenGL(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc);
 	};
 
 }
