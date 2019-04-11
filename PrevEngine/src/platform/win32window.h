@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef PV_WINDOWING_API_WIN32
+#if defined(PV_WINDOWING_API_WIN32) || defined(PV_WINDOWING_API_BOTH)
 
 #include "engine/window.h"
 

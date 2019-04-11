@@ -1,13 +1,13 @@
 #include "pch.h"
 #include "glfwwindow.h"
 
-#ifdef PV_WINDOWING_API_GLFW
+#if defined(PV_WINDOWING_API_GLFW) || defined(PV_WINDOWING_API_BOTH)
 
 namespace prev {
 
 	GlfwWindow * s_GlobalInstance;
 
-	Window * Window::Create(const WindowDesc & windowDesc) {
+	Window * Window::CreateGLFWWindow(const WindowDesc & windowDesc) {
 		GlfwWindow * window = new GlfwWindow(windowDesc);
 		if (!window->m_Status) {
 			PV_POST_FATAL("Unable to create window");
@@ -77,7 +77,7 @@ namespace prev {
 		});
 
 		glfwSetScrollCallback(m_Data.Window, [](GLFWwindow * window, double xOffset, double yOffset) -> void {
-			MouseScrolledEvent e(xOffset, yOffset);
+			MouseScrolledEvent e((float)xOffset, (float)yOffset);
 			s_GlobalInstance->m_Data.CallbackFunction(e);
 		});
 
@@ -98,6 +98,9 @@ namespace prev {
 		});
 
 		m_Status = true;
+
+		m_WindowAPI = WindowAPI::WINDOWING_API_GLFW;
+
 		return;
 	}
 

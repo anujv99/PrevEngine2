@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "directxapi.h"
 
+#if defined(PV_RENDERING_API_DIRECTX) || defined(PV_RENDERING_API_BOTH)
+
 #include "api/glfwhwnd.h"
 
 #define CHECK_AND_POST_ERROR(hr, string, ...) { if (FAILED(hr)) { PV_POST_ERROR(string); __VA_ARGS__; return false; }}
@@ -43,8 +45,9 @@ namespace prev {
 			return;
 		}
 
-		return;
+		m_RenderingAPI = RenderingAPI::RENDERING_API_DIRECTX;
 
+		return;
 	}
 
 	DirectXAPI::~DirectXAPI() {
@@ -118,7 +121,7 @@ namespace prev {
 		}
 
 		m_Data.AdapterDesc = std::string(_bstr_t(adapterDesc.Description));
-		m_Data.DedicatedVideoMemory = adapterDesc.DedicatedVideoMemory / (1024 * 1024);
+		m_Data.DedicatedVideoMemory = (UINT)adapterDesc.DedicatedVideoMemory / (1024 * 1024);
 
 		return true;
 	}
@@ -164,7 +167,7 @@ namespace prev {
 		HRESULT hr;
 
 		hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
-										   D3D11_CREATE_DEVICE_DEBUG, featureLevels, std::size(featureLevels), D3D11_SDK_VERSION,
+										   D3D11_CREATE_DEVICE_DEBUG, featureLevels, (UINT)std::size(featureLevels), D3D11_SDK_VERSION,
 										   &swapChainDesc, m_Data.SwapChain.GetAddressOf(), m_Data.Device.GetAddressOf(), &selectedFeatureLevel,
 										   m_Data.DeviceContext.GetAddressOf());
 		CHECK_AND_POST_ERROR(hr, "Unable to create D3D Device and swap chain");
@@ -295,3 +298,5 @@ namespace prev {
 	}
 
 }
+
+#endif

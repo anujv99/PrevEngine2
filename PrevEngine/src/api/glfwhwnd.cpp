@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "glfwhwnd.h"
 
-#ifdef PV_WINDOWING_API_GLFW
+#if defined(PV_WINDOWING_API_GLFW) || defined(PV_WINDOWING_API_BOTH)
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 

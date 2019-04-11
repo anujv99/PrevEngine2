@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "win32window.h"
 
-#ifdef PV_WINDOWING_API_WIN32
+#if defined(PV_WINDOWING_API_WIN32) || defined(PV_WINDOWING_API_BOTH)
 
 #include "engine/input/mousekeycodes.h"
 
@@ -9,10 +9,10 @@ namespace prev {
 
 	Win32Window * s_GlobalInstance = nullptr;
 
-	Window * Window::Create(const WindowDesc & windowDesc) {
+	Window * Window::CreateWin32Window(const WindowDesc & windowDesc) {
 		Win32Window * window = new Win32Window(windowDesc);
 		if (!window->m_Status) {
-			PV_POST_FATAL("Unable to create window");
+			PV_POST_FATAL("unable to create window");
 			delete window;
 			return nullptr;
 		}
@@ -163,6 +163,8 @@ namespace prev {
 			PV_POST_FATAL("Unable to create window from window class");
 			return;
 		}
+
+		m_WindowAPI = WindowAPI::WINDOWING_API_WIN32;
 	}
 
 	Win32Window::~Win32Window() {

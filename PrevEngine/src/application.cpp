@@ -12,7 +12,7 @@ namespace prev {
 	Application::Application() {
 
 		WindowDesc winDesc;
-		s_Window = Window::Create();
+		s_Window = Window::Create(winDesc, WindowAPI::WINDOWING_API_WIN32);
 		if (s_Window == nullptr) {
 			IsAppReady = false;
 			return;
@@ -20,7 +20,7 @@ namespace prev {
 
 		GraphicsDesc graphicsDesc(winDesc.Width, winDesc.Height);
 		graphicsDesc.Vsync = false;
-		s_GraphicsAPI = GraphicsApi::UseOpenGL(s_Window->GetRawPointer(), s_Window->m_WindowAPI, graphicsDesc);
+		s_GraphicsAPI = GraphicsApi::Create(s_Window->GetRawPointer(), s_Window->m_WindowAPI, graphicsDesc, RenderingAPI::RENDERING_API_OPENGL);
 		if (s_GraphicsAPI == nullptr) {
 			IsAppReady = false;
 			return;
@@ -47,8 +47,10 @@ namespace prev {
 			Timer::Update();
 			s_Window->Update();
 			s_GraphicsAPI->StartFrame();
+			
 
-			s_GraphicsAPI->EndFrame();
+
+			s_GraphicsAPI->EndFrame(); // Can skip this in OpenGL
 		}
 	}
 

@@ -22,7 +22,7 @@ workspace "PrevEngine"
 	
 	To Compile both use 	| PV_WINDOWING_API_BOTH
 	]]--
-	windowingAPI = "PV_WINDOWING_API_WIN32"
+	windowingAPI = "PV_WINDOWING_API_BOTH"
 	
 	if (windowingAPI == "PV_WINDOWING_API_GLFW" or windowingAPI == "PV_WINDOWING_API_BOTH") then
 		include "PrevEngine/vendor/glfw"
@@ -36,7 +36,7 @@ workspace "PrevEngine"
 	
 	To Compile both use 	 | PV_RENDERING_API_BOTH
 	]]--
-	renderingAPI = "PV_RENDERING_API_OPENGL"
+	renderingAPI = "PV_RENDERING_API_BOTH"
 	
 	if (renderingAPI == "PV_RENDERING_API_OPENGL" or renderingAPI == "PV_RENDERING_API_BOTH") then
 		include "PrevEngine/vendor/glad"
@@ -73,15 +73,12 @@ workspace "PrevEngine"
 		
 		if (renderingAPI == "PV_RENDERING_API_OPENGL") then
 			links {
-				"opengl32.lib"
+				"opengl32.lib",
+				"glad"
 			}
 			
 			includedirs {
 				"%{IncludeDir.glad}"
-			}
-			
-			links {
-				"glad"
 			}
 		elseif (renderingAPI == "PV_RENDERING_API_DIRECTX") then
 			links {
@@ -94,7 +91,12 @@ workspace "PrevEngine"
 				"opengl32.lib",
 				"d3d11.lib",
 				"d3dcompiler.lib",
-				"dxgi.lib"
+				"dxgi.lib",
+				"glad"
+			}
+			
+			includedirs {
+				"%{IncludeDir.glad}"
 			}
 		else
 			error("Invalid renderingAPI")

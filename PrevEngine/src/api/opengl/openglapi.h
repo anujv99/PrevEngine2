@@ -1,5 +1,7 @@
 #pragma once
 
+#if defined(PV_RENDERING_API_OPENGL) || defined(PV_RENDERING_API_BOTH)
+
 #include "engine/graphicsapi.h"
 
 namespace prev {
@@ -33,3 +35,5 @@ namespace prev {
 	};
 
 }
+
+#endif

@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "openglapi.h"
 
+#if defined(PV_RENDERING_API_OPENGL) || defined(PV_RENDERING_API_BOTH)
+
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
 
@@ -41,6 +43,8 @@ namespace prev {
 			wglSwapIntervalEXT(1);
 		else
 			wglSwapIntervalEXT(0);
+
+		m_RenderingAPI = RenderingAPI::RENDERING_API_OPENGL;
 
 		return;
 	}
@@ -141,3 +145,5 @@ namespace prev {
 	}
 
 }
+
+#endif
