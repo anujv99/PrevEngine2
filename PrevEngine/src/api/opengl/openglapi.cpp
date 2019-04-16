@@ -6,12 +6,12 @@
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
 
-#include "api/glfwhwnd.h"
+#include "platform/gethwnd.h"
 
 namespace prev {
 
-	GraphicsApi * GraphicsApi::UseOpenGL(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc) {
-		OpenGLApi * api = new OpenGLApi(windowRawPointer, windowApi, graphicsDesc);
+	GraphicsAPI * GraphicsAPI::UseOpenGL(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc) {
+		OpenGLAPI * api = new OpenGLAPI(windowRawPointer, windowApi, graphicsDesc);
 
 		if (!api->m_Status) {
 			PV_POST_ERROR("Unable to Use DirectX11");
@@ -22,7 +22,7 @@ namespace prev {
 		return api;
 	}
 
-	OpenGLApi::OpenGLApi(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc) {
+	OpenGLAPI::OpenGLAPI(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc) {
 		m_Data.Width = graphicsDesc.Width;
 		m_Data.Height = graphicsDesc.Height;
 		m_Data.Vsync = graphicsDesc.Vsync;
@@ -31,7 +31,7 @@ namespace prev {
 		if (windowApi == WindowAPI::WINDOWING_API_WIN32) {
 			m_Data.HWnd = (HWND)windowRawPointer;
 		} else if (windowApi == WindowAPI::WINDOWING_API_GLFW) {
-			m_Data.HWnd = GetHWNDFromGLFW(windowRawPointer);
+			m_Data.HWnd = GetHWND(windowRawPointer);
 		}
 
 		m_Status = InitializeOpenGL();
@@ -49,21 +49,20 @@ namespace prev {
 		return;
 	}
 
-	OpenGLApi::~OpenGLApi() {
+	OpenGLAPI::~OpenGLAPI() {
 		wglDeleteContext(m_Data.OpenGLRenderingContext);
 	}
 
-	void OpenGLApi::StartFrame() {
-		SwapBuffers(m_Data.HandleToDeviceContext);
+	void OpenGLAPI::StartFrame() {
 		glClearColor(1, 0, 1, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
-	void OpenGLApi::EndFrame() {
-		
+	void OpenGLAPI::EndFrame() {
+		SwapBuffers(m_Data.HandleToDeviceContext);
 	}
 
-	bool OpenGLApi::InitializeOpenGL() {
+	bool OpenGLAPI::InitializeOpenGL() {
 		m_Data.PFD = {
 				sizeof(PIXELFORMATDESCRIPTOR),
 				1,
@@ -128,7 +127,7 @@ namespace prev {
 		return true;
 	}
 
-	bool OpenGLApi::LoadGladOpenGL(void * (*glProc)(const char *)) {
+	bool OpenGLAPI::LoadGladOpenGL(void * (*glProc)(const char *)) {
 		if (!gladLoadGLLoader(glProc)) {
 			PV_POST_ERROR("Unable to initialize glad");
 			return false;
@@ -136,7 +135,7 @@ namespace prev {
 		return true;
 	}
 
-	bool OpenGLApi::LoadwglGladOpenGL(HDC hdc, void * (*glProc)(const char *)) {
+	bool OpenGLAPI::LoadwglGladOpenGL(HDC hdc, void * (*glProc)(const char *)) {
 		if (!gladLoadWGLLoader(glProc, hdc)) {
 			PV_POST_ERROR("Unable to initialize wglGlad");
 			return false;

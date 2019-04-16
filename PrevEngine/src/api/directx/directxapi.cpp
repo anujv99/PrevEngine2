@@ -3,13 +3,13 @@
 
 #if defined(PV_RENDERING_API_DIRECTX) || defined(PV_RENDERING_API_BOTH)
 
-#include "api/glfwhwnd.h"
+#include "platform/gethwnd.h"
 
 #define CHECK_AND_POST_ERROR(hr, string, ...) { if (FAILED(hr)) { PV_POST_ERROR(string); __VA_ARGS__; return false; }}
 
 namespace prev {
 
-	GraphicsApi * GraphicsApi::UseDirectX(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc) {
+	GraphicsAPI * GraphicsAPI::UseDirectX(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc) {
 		DirectXAPI * api = new DirectXAPI(windowRawPointer, windowApi, graphicsDesc);
 
 		if (!api->m_Status) {
@@ -30,7 +30,7 @@ namespace prev {
 		if (windowApi == WindowAPI::WINDOWING_API_WIN32) {
 			m_Data.HWnd = (HWND)windowRawPointer;
 		} else if (windowApi == WindowAPI::WINDOWING_API_GLFW) {
-			m_Data.HWnd = GetHWNDFromGLFW(windowRawPointer);
+			m_Data.HWnd = GetHWND(windowRawPointer);
 		}
 
 		m_Status = CheckVideoAdapter();

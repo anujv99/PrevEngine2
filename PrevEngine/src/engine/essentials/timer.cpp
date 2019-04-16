@@ -7,9 +7,9 @@ namespace prev {
 	std::chrono::time_point<std::chrono::steady_clock> Timer::m_Time = std::chrono::high_resolution_clock::now();
 	std::chrono::time_point<std::chrono::steady_clock> Timer::m_StartTime = std::chrono::high_resolution_clock::now();
 
-	unsigned int Timer::m_FPS						= 0;
-	unsigned long long int Timer::m_LastTimeSec		= 0;
-	bool Timer::shouldShowFPS						= false;
+	unsigned int Timer::m_FPS = 0;
+	unsigned long long int Timer::m_LastTimeSec = 0;
+	bool Timer::shouldShowFPS = false;
 
 	void Timer::Update() {
 		auto currentTime = std::chrono::high_resolution_clock::now();
@@ -19,7 +19,7 @@ namespace prev {
 		if ((unsigned long long int)GetTime() > m_LastTimeSec) {
 			m_LastTimeSec++;
 			if (shouldShowFPS) {
-				PV_DEBUG_LOG(std::string("[FPS = " + std::to_string(m_FPS) + "]").c_str());
+				PV_IMGUI_LOG(std::string("[FPS = " + std::to_string(m_FPS) + "]").c_str(), LogLevel::PV_INFO);
 			}
 			m_FPS = 0;
 		}

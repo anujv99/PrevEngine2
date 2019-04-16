@@ -6,10 +6,10 @@
 
 namespace prev {
 
-	class OpenGLApi : public GraphicsApi {
+	class OpenGLAPI : public GraphicsAPI {
 	public:
-		OpenGLApi(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc);
-		~OpenGLApi();
+		OpenGLAPI(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc);
+		~OpenGLAPI();
 
 		virtual void StartFrame() override;
 		virtual void EndFrame() override;
@@ -17,8 +17,8 @@ namespace prev {
 		bool InitializeOpenGL();
 		bool LoadGladOpenGL(void * (*glProc)(const char *));
 		bool LoadwglGladOpenGL(HDC hdc, void * (*glProc)(const char *));
-	private:
-		struct GraphicsData {
+	public:
+		struct OpenGLGraphicsData {
 			unsigned int Width;
 			unsigned int Height;
 			bool Vsync;
@@ -29,7 +29,7 @@ namespace prev {
 			HDC HandleToDeviceContext;
 			HGLRC OpenGLRenderingContext;
 		};
-		GraphicsData m_Data;
+		OpenGLGraphicsData m_Data;
 	public:
 		bool m_Status = false;
 	};

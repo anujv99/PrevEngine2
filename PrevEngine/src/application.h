@@ -7,6 +7,7 @@
 namespace prev {
 
 	class Application {
+		friend class ImGuiLayer;
 	public:
 		Application();
 		~Application();
@@ -14,6 +15,9 @@ namespace prev {
 		void Run();
 		void EventCallbackFunc(Event & e);
 		bool WindowCloseFunc(WindowCloseEvent & e);
+	private:
+		static void * GetGraphicsAPI();
+		static void * GetWindow();
 	public:
 		bool IsAppReady = true;
 		bool IsAppRunning = true;

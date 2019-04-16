@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "glfwhwnd.h"
+#include "gethwnd.h"
 
 #if defined(PV_WINDOWING_API_GLFW) || defined(PV_WINDOWING_API_BOTH)
 
@@ -9,18 +9,17 @@
 #include <GLFW/glfw3native.h>
 
 namespace prev {
-	HWND GetHWNDFromGLFW(void * glfwWindow) {
-		HWND hWnd = glfwGetWin32Window((GLFWwindow *)glfwWindow);
+	HWND GetHWND(void * rawpointer) {
+		HWND hWnd = glfwGetWin32Window((GLFWwindow *)rawpointer);
 		return hWnd;
 	}
 }
 
-
 #else
 
 namespace prev {
-	HWND GetHWNDFromGLFW(void * glfwWindow) {
-		return nullptr;
+	HWND GetHWND(void * rawpointer) {
+		return (HWND)rawpointer;
 	}
 }
 

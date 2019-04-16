@@ -84,3 +84,7 @@
 
 //Layer
 #include "engine/layer/layerstack.h"
+
+//KeyCodes
+#include "engine/input/keyboardkeycodes.h"
+#include "engine/input/mousekeycodes.h"

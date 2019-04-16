@@ -13,6 +13,9 @@ workspace "PrevEngine"
 	IncludeDir = {}
 	IncludeDir["glfw"] = "PrevEngine/vendor/glfw/include"
 	IncludeDir["glad"] = "PrevEngine/vendor/glad/include"
+	IncludeDir["ImGui"] = "PrevEngine/vendor/ImGui"
+	
+	include "PrevEngine/vendor/ImGui"
 	
 	--[[
 	Windowing API supprted  | windowingAPI
@@ -59,6 +62,11 @@ workspace "PrevEngine"
 		
 		includedirs {
 			"%{prj.name}/src",
+			"%{IncludeDir.ImGui}"
+		}
+		
+		links {
+			"ImGui"
 		}
 		
 		if (windowingAPI == "PV_WINDOWING_API_GLFW" or windowingAPI == "PV_WINDOWING_API_BOTH") then

@@ -16,11 +16,12 @@ namespace prev {
 		virtual void Update() override;
 		virtual void SetEventCallbackFunc(std::function<void(Event & e) > func) override;
 		virtual void * GetRawPointer() override;
+		virtual std::pair<int, int> GetWindowSize() { return std::pair<int, int>(m_Data.Width, m_Data.Height); }
 	public:
 		bool m_Status;
 	private:
 		void DefaultEventCallbackFunction(Event & e) { }
-	private:
+	public:
 		struct WindowData {
 			// Useful Info
 			unsigned int Width;
@@ -35,6 +36,7 @@ namespace prev {
 		};
 
 		WindowData m_Data;
+		std::map<int, int> m_KeyMap;
 	};
 
 }

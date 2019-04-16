@@ -29,6 +29,7 @@ namespace prev {
 		virtual void Update() = 0;
 		virtual void SetEventCallbackFunc(std::function<void(Event & e)>) = 0;
 		virtual void * GetRawPointer() = 0;
+		virtual std::pair<int, int> GetWindowSize() = 0;
 	public:
 		WindowAPI m_WindowAPI = WindowAPI::WINDOWING_API_UNINIT;
 	protected:

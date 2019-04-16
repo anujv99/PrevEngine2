@@ -6,7 +6,7 @@
 
 namespace prev {
 
-	class DirectXAPI : public GraphicsApi {
+	class DirectXAPI : public GraphicsAPI {
 	public:
 		DirectXAPI(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc);
 		~DirectXAPI();
@@ -16,8 +16,8 @@ namespace prev {
 	private:
 		bool CheckVideoAdapter();
 		bool CreateDeviceAndSwapChain();
-	private:
-		struct GraphicsData {
+	public:
+		struct DirectXGraphicsData {
 			unsigned int Width;
 			unsigned int Height;
 			unsigned int DedicatedVideoMemory;
@@ -46,7 +46,7 @@ namespace prev {
 
 			D3D_FEATURE_LEVEL FeatureLevel;
 		};
-		GraphicsData m_Data;
+		DirectXGraphicsData m_Data;
 	public:
 		bool m_Status = false;
 	};

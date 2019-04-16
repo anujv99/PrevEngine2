@@ -19,6 +19,7 @@ namespace prev {
 		return (Window *)window;
 	}
 
+	//TODO Update m_Data for display size and all
 	LRESULT CALLBACK WindowProc(_In_ HWND hWnd, _In_ UINT msg, _In_ WPARAM wParam, _In_ LPARAM lParam) {
 		switch (msg) {
 		case WM_MOUSEMOVE:
@@ -97,6 +98,7 @@ namespace prev {
 			s_GlobalInstance->m_Data.CallbackFunction(e);
 			break;
 		}
+		case WM_SYSKEYDOWN:
 		case WM_KEYDOWN:
 		{
 			if (lParam & 0x40000000) {
@@ -109,9 +111,16 @@ namespace prev {
 				break;
 			}
 		}
+		case WM_SYSKEYUP:
 		case WM_KEYUP:
 		{
 			KeyReleasedEvent e((int)wParam);
+			s_GlobalInstance->m_Data.CallbackFunction(e);
+			break;
+		}
+		case WM_CHAR:
+		{
+			CharacterEvent  e((char)wParam);
 			s_GlobalInstance->m_Data.CallbackFunction(e);
 			break;
 		}
