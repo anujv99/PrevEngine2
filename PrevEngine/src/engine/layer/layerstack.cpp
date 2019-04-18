@@ -44,9 +44,18 @@ namespace prev {
 		for (auto layer : m_Layers) {
 			layer->OnUpdate();
 		}
-
 		for (auto layer : m_Overlays) {
 			layer->OnUpdate();
+		}
+	}
+
+	void LayerStack::OnImGuiUpdate() {
+		for (auto layer : m_Layers) {
+			layer->OnImGuiUpdate();
+		}
+
+		for (auto layer : m_Overlays) {
+			layer->OnImGuiUpdate();
 		}
 	}
 

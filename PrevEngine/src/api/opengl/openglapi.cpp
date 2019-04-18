@@ -62,6 +62,20 @@ namespace prev {
 		SwapBuffers(m_Data.HandleToDeviceContext);
 	}
 
+	void OpenGLAPI::OnEvent(Event & e) {
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(OpenGLAPI::WindowSizeChanged));
+	}
+
+	bool OpenGLAPI::WindowSizeChanged(WindowResizeEvent & e) {
+		m_Data.Width = e.GetWidth();
+		m_Data.Height = e.GetHeight();
+
+		glViewport(0, 0, m_Data.Width, m_Data.Height);
+
+		return false;
+	}
+
 	bool OpenGLAPI::InitializeOpenGL() {
 		m_Data.PFD = {
 				sizeof(PIXELFORMATDESCRIPTOR),

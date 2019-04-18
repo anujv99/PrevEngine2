@@ -13,7 +13,7 @@ namespace prev {
 	};
 
 	struct Log {
-		friend class ImGuiLayer;
+		friend class ImGuiLogger;
 		static void ImGuiLog(std::string message, LogLevel errorLevel) {
 			if (m_LogFunction) {
 				m_LogFunction(message, errorLevel);

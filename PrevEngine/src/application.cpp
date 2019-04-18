@@ -3,7 +3,9 @@
 
 #include "engine/window.h"
 #include "engine/graphicsapi.h"
-#include "engine/imgui/imguilayer.h"
+
+#include "engine/imgui/imguilogger.h"
+#include "engine/imgui/imguiconsole.h"
 
 namespace prev {
 
@@ -21,16 +23,42 @@ namespace prev {
 
 		GraphicsDesc graphicsDesc(winDesc.Width, winDesc.Height);
 		graphicsDesc.Vsync = false;
-		s_GraphicsAPI = GraphicsAPI::Create(s_Window->GetRawPointer(), s_Window->m_WindowAPI, graphicsDesc);
+		graphicsDesc.Fullscreen = false;
+		s_GraphicsAPI = GraphicsAPI::Create(s_Window->GetRawPointer(), s_Window->m_WindowAPI, graphicsDesc, RenderingAPI::RENDERING_API_DIRECTX);
 		if (s_GraphicsAPI == nullptr) {
 			IsAppReady = false;
 			return;
 		}
 
 		s_Window->SetEventCallbackFunc(BIND_EVENT_FN(Application::EventCallbackFunc));
-		Timer::FPSCounter(true);
+		Timer::FPSCounter(false);
 
-		m_LayerStack.PushOverlay(new ImGuiLayer(s_Window->m_WindowAPI, s_GraphicsAPI->m_RenderingAPI));
+		IMGUI_CALL(m_ImGuiLayer = new ImGuiLayer(s_Window->m_WindowAPI, s_GraphicsAPI->m_RenderingAPI));
+		IMGUI_CALL(m_LayerStack.PushOverlay(new ImGuiLogger()));
+		
+			auto imguiconsole = new ImGuiConsole(); 
+			m_LayerStack.PushOverlay(imguiconsole);
+			imguiconsole->AddConsoleCommand("exit", "Exit the program", [this](const std::vector<std::string> & cmdParam) -> void {
+				IsAppRunning = false;
+			});
+			imguiconsole->AddConsoleCommand("window_size", "Set window size in real time", [this](const std::vector<std::string> & cmdParam) -> void {
+				if (cmdParam.size() != 3) {
+					return;
+				}
+				int x = std::atoi(cmdParam[1].c_str());
+				int y = std::atoi(cmdParam[2].c_str());
+
+				RECT rc;
+				rc.left = 0;
+				rc.top = 0;
+				rc.right = rc.left + x;
+				rc.bottom = rc.top + y;
+
+				AdjustWindowRectEx(&rc, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, NULL, WS_EX_APPWINDOW);
+
+				SetWindowPos((HWND)s_Window->GetRawPointer(), HWND_TOP, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_SHOWWINDOW);
+			});
+		
 	}
 
 	Application::~Application() {
@@ -42,6 +70,10 @@ namespace prev {
 			delete s_GraphicsAPI;
 			s_GraphicsAPI = nullptr;
 		}
+		if (m_ImGuiLayer != nullptr) {
+			delete m_ImGuiLayer;
+			m_ImGuiLayer = nullptr;
+		}
 		return;
 	}
 
@@ -50,8 +82,14 @@ namespace prev {
 			Timer::Update();
 			s_Window->Update();
 			s_GraphicsAPI->StartFrame();
-			
+
 			m_LayerStack.OnUpdate();
+
+			IMGUI_CALL (
+				m_ImGuiLayer->StartFrame();
+				m_LayerStack.OnImGuiUpdate();
+				m_ImGuiLayer->EndFrame();
+			);
 
 			s_GraphicsAPI->EndFrame();
 		}
@@ -60,6 +98,8 @@ namespace prev {
 	void Application::EventCallbackFunc(Event & e) {
 
 		m_LayerStack.OnEvent(e);
+		m_ImGuiLayer->OnEvent(e);
+		s_GraphicsAPI->OnEvent(e);
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(Application::WindowCloseFunc));

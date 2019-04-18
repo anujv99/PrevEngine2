@@ -5,7 +5,6 @@
 
 #include "application.h"
 #include "engine/input/keyboardkeycodes.h"
-#include "imguilogger.h"
 #include "engine/essentials/log.h"
 
 #if defined(PV_RENDERING_API_DIRECTX) || defined(PV_RENDERING_API_BOTH)
@@ -22,13 +21,6 @@
 #endif
 
 namespace prev {
-
-	std::function<void(std::string, LogLevel)> Log::m_LogFunction;
-
-	static bool is_logging = true;
-	static std::map<LogLevel, ImVec4> m_LogColors;
-
-	static ImGuiAppLog log;
 
 	ImGuiLayer::ImGuiLayer(WindowAPI windowAPI, RenderingAPI graphicsAPI) {
 
@@ -91,16 +83,11 @@ namespace prev {
 			io.KeyMap[ImGuiKey_Z]			= PV_KEYBOARD_KEY_Z;
 		}
 
-		{
-			m_LogColors[LogLevel::PV_INFO]	= ImVec4(0, 1, 0, 1);
-			m_LogColors[LogLevel::PV_WARN]	= ImVec4(1, 1, 0, 1);
-			m_LogColors[LogLevel::PV_ERROR]	= ImVec4(1, 0, 0, 1);
-			m_LogColors[LogLevel::PV_FATAL]	= ImVec4(1, 0, 1, 1);
-		}
+		Window * win = (Window *)Application::GetWindow();
+		auto [x, y] = win->GetWindowSize();
 
-		Log::m_LogFunction = [](std::string s, LogLevel level) -> void {
-			log.AddLog(level, s);
-		};
+		m_WinSizeX = x;
+		m_WinSizeY = y;
 	}
 
 	ImGuiLayer::~ImGuiLayer() {
@@ -118,45 +105,7 @@ namespace prev {
 		ImGui::DestroyContext();
 	}
 
-	void ImGuiLayer::ShowLogger() {
-		log.Draw("Log", m_LogColors, &is_logging);
-	}
-
-	void ImGuiLayer::ImGuiStuff() {
-		if (is_logging)
-			ShowLogger();
-	}
-
-	void ImGuiLayer::OnAttach() {
-	}
-
-	void ImGuiLayer::OnDetach() {
-	}
-
-	void ImGuiLayer::OnUpdate() {
-
-		ImGuiIO & io = ImGui::GetIO();
-		io.DeltaTime = Timer::GetDeltaTime();
-		Window * win = (Window *)Application::GetWindow();
-		auto [x, y] = win->GetWindowSize();
-		io.DisplaySize.x = (float)x;
-		io.DisplaySize.y = (float)y;
-
-		#if defined(PV_RENDERING_API_DIRECTX) || defined(PV_RENDERING_API_BOTH)
-			if (m_GraphicsAPI == RenderingAPI::RENDERING_API_DIRECTX) {
-				ImGui_ImplDX11_NewFrame();
-			}
-		#endif
-
-		#if defined(PV_RENDERING_API_OPENGL) || defined(PV_RENDERING_API_BOTH)
-			if (m_GraphicsAPI == RenderingAPI::RENDERING_API_OPENGL) {
-				ImGui_ImplOpenGL3_NewFrame();
-			}
-		#endif
-		ImGui::NewFrame();
-
-		ImGuiStuff();
-
+	void ImGuiLayer::EndFrame() {
 		ImGui::EndFrame();
 		ImGui::Render();
 		#if defined(PV_RENDERING_API_DIRECTX) || defined(PV_RENDERING_API_BOTH)
@@ -170,7 +119,27 @@ namespace prev {
 				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 			}
 		#endif
+	}
 
+	void ImGuiLayer::StartFrame() {
+		ImGuiIO & io = ImGui::GetIO();
+		io.DeltaTime = Timer::GetDeltaTime();
+		io.DisplaySize.x = (float)m_WinSizeX;
+		io.DisplaySize.y = (float)m_WinSizeY;
+
+		#if defined(PV_RENDERING_API_DIRECTX) || defined(PV_RENDERING_API_BOTH)
+			if (m_GraphicsAPI == RenderingAPI::RENDERING_API_DIRECTX) {
+				ImGui_ImplDX11_NewFrame();
+			}
+		#endif
+
+		#if defined(PV_RENDERING_API_OPENGL) || defined(PV_RENDERING_API_BOTH)
+			if (m_GraphicsAPI == RenderingAPI::RENDERING_API_OPENGL) {
+				ImGui_ImplOpenGL3_NewFrame();
+			}
+		#endif
+
+		ImGui::NewFrame();
 	}
 
 	void ImGuiLayer::OnEvent(Event & event) {
@@ -182,6 +151,7 @@ namespace prev {
 		dispatcher.Dispatch<KeyPressedEvent>(BIND_EVENT_FN(ImGuiLayer::KeyPressed));
 		dispatcher.Dispatch<KeyReleasedEvent>(BIND_EVENT_FN(ImGuiLayer::KeyReleased));
 		dispatcher.Dispatch<CharacterEvent>(BIND_EVENT_FN(ImGuiLayer::CharacterInputEvent));
+		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(ImGuiLayer::WindowSizeChanged));
 	}
 
 	bool ImGuiLayer::MouseMoved(MouseMovedEvent & e) {
@@ -197,6 +167,11 @@ namespace prev {
 	bool ImGuiLayer::MouseButtonReleased(MouseButtonReleasedEvent & e) {
 		ImGuiIO & io = ImGui::GetIO();
 		io.MouseDown[e.GetMouseButton()] = false;
+		return false;
+	}
+	bool ImGuiLayer::WindowSizeChanged(WindowResizeEvent & e) {
+		m_WinSizeX = e.GetWidth();
+		m_WinSizeY = e.GetHeight();
 		return false;
 	}
 	bool ImGuiLayer::MouseScrolled(MouseScrolledEvent & e) {

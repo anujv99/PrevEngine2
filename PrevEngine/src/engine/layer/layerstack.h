@@ -16,6 +16,7 @@ namespace prev {
 
 	public:
 		void OnUpdate();
+		void OnImGuiUpdate();
 		void OnEvent(Event & e);
 	private:
 		std::vector<Layer *> m_Layers;

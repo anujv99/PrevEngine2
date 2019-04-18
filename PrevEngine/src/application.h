@@ -1,8 +1,11 @@
 #pragma once
 
+//#include <vld.h> //Use vld to check memory leaks
+
 #include "engine/events/event.h"
 #include "engine/events/applicationevent.h"
 #include "engine/layer/layerstack.h"
+#include "engine/imgui/imguilayer.h"
 
 namespace prev {
 
@@ -23,6 +26,7 @@ namespace prev {
 		bool IsAppRunning = true;
 	private:
 		LayerStack m_LayerStack;
+		ImGuiLayer * m_ImGuiLayer = nullptr;
 	};
 
 }

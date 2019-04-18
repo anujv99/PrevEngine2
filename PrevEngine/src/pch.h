@@ -60,6 +60,7 @@
 #include <sstream>
 
 #include <string>
+#include <array>
 #include <vector>
 #include <list>
 #include <map>

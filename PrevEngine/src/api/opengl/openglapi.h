@@ -13,6 +13,10 @@ namespace prev {
 
 		virtual void StartFrame() override;
 		virtual void EndFrame() override;
+
+		virtual void OnEvent(Event & e) override;
+	private:
+		bool WindowSizeChanged(WindowResizeEvent & e);
 	private:
 		bool InitializeOpenGL();
 		bool LoadGladOpenGL(void * (*glProc)(const char *));
