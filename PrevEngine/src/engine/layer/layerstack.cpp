@@ -73,4 +73,18 @@ namespace prev {
 		}
 	}
 
+	Layer * LayerStack::GetLayer(const std::string & layerName) {
+		for (unsigned int i = 0; i < m_Layers.size(); i++) {
+			if (m_Layers[i]->m_DebugName == layerName) {
+				return m_Layers[i];
+			}
+		}
+		for (unsigned int i = 0; i < m_Overlays.size(); i++) {
+			if (m_Overlays[i]->m_DebugName == layerName) {
+				return m_Overlays[i];
+			}
+		}
+		return nullptr;
+	}
+
 }

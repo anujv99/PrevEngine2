@@ -14,15 +14,21 @@ namespace prev {
 		virtual void StartFrame() override;
 		virtual void EndFrame() override;
 		virtual void OnEvent(Event & e) override;
+		virtual void SetFullscreen(bool fullscreen) override;
+		virtual void ChangeResolution(int index) override;
+		virtual std::vector<std::pair<unsigned int, unsigned int>> GetSupportedResolution() override;
 	private:
-		bool WindowSizeChanged(WindowResizeEvent & e);
+		bool ChangeWindowResolution(int index);
 	private:
 		bool CheckVideoAdapter();
 		bool CreateDeviceAndSwapChain();
+		HRESULT CreateDepthStencilBuffer(UINT width, UINT height);
+		HRESULT CreateDepthStencilState();
+		HRESULT CreateDepthStencilView();
+		HRESULT CreateRasterizerState();
+		D3D11_VIEWPORT CreateViewport(UINT width, UINT height);
 	public:
 		struct DirectXGraphicsData {
-			unsigned int Width;
-			unsigned int Height;
 			unsigned int DedicatedVideoMemory;
 			struct {
 				unsigned int Numerator;
@@ -47,7 +53,9 @@ namespace prev {
 			Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		DepthStencilView;
 			Microsoft::WRL::ComPtr<ID3D11RasterizerState>		RasterizerState;
 
-			D3D_FEATURE_LEVEL FeatureLevel;
+			D3D_FEATURE_LEVEL				FeatureLevel;
+			UINT							CurrentModeDescriptionIndex;
+			std::vector<DXGI_MODE_DESC>		AllDisplayModes;
 		};
 		DirectXGraphicsData m_Data;
 	public:

@@ -15,6 +15,9 @@ namespace prev {
 		virtual void EndFrame() override;
 
 		virtual void OnEvent(Event & e) override;
+		virtual void ChangeResolution(int index) override;
+		virtual void SetFullscreen(bool fullscreen) override;
+		virtual std::vector<std::pair<unsigned int, unsigned int>> GetSupportedResolution() override;
 	private:
 		bool WindowSizeChanged(WindowResizeEvent & e);
 	private:

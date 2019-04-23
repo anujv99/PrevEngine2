@@ -18,6 +18,7 @@ namespace prev {
 		void Run();
 		void EventCallbackFunc(Event & e);
 		bool WindowCloseFunc(WindowCloseEvent & e);
+		inline LayerStack & GetLayerStack() noexcept { return m_LayerStack; }
 	private:
 		static void * GetGraphicsAPI();
 		static void * GetWindow();

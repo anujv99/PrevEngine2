@@ -26,7 +26,11 @@ namespace prev {
 		virtual ~GraphicsAPI() { }
 		virtual void StartFrame() = 0;
 		virtual void EndFrame() = 0;
+		virtual void ChangeResolution(int index) = 0;
+		virtual std::vector<std::pair<unsigned int, unsigned int>> GetSupportedResolution() = 0;
+
 		virtual void OnEvent(Event & e) { };
+		virtual void SetFullscreen(bool fullscreen) { };
 	public:
 		RenderingAPI m_RenderingAPI = RenderingAPI::RENDERING_API_UNINIT;
 	protected:

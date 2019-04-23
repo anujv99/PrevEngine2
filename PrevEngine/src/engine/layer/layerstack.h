@@ -18,6 +18,8 @@ namespace prev {
 		void OnUpdate();
 		void OnImGuiUpdate();
 		void OnEvent(Event & e);
+
+		Layer * GetLayer(const std::string & layerName);
 	private:
 		std::vector<Layer *> m_Layers;
 		std::vector<Layer *> m_Overlays;

@@ -8,7 +8,6 @@
 #define CHECK_AND_POST_ERROR(hr, string, ...) { if (FAILED(hr)) { PV_POST_ERROR(string); __VA_ARGS__; return false; }}
 
 namespace prev {
-
 	GraphicsAPI * GraphicsAPI::UseDirectX(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc) {
 		DirectXAPI * api = new DirectXAPI(windowRawPointer, windowApi, graphicsDesc);
 
@@ -22,8 +21,6 @@ namespace prev {
 	}
 
 	DirectXAPI::DirectXAPI(void * windowRawPointer, WindowAPI windowApi, GraphicsDesc & graphicsDesc) {
-		m_Data.Width		= graphicsDesc.Width;
-		m_Data.Height		= graphicsDesc.Height;
 		m_Data.Vsync		= graphicsDesc.Vsync;
 		m_Data.Fullscreen	= graphicsDesc.Fullscreen;
 		
@@ -51,14 +48,12 @@ namespace prev {
 	}
 
 	DirectXAPI::~DirectXAPI() {
-
 	}
 
 	void DirectXAPI::StartFrame() {
 		static float color[] = { 0, 0, 1, 1 };
 		m_Data.DeviceContext->ClearRenderTargetView(m_Data.RenderTarget.Get(), color);
-		//m_Data.DeviceContext->ClearDepthStencilView(m_Data.DepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-
+		m_Data.DeviceContext->ClearDepthStencilView(m_Data.DepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 		return;
 	}
 
@@ -67,29 +62,81 @@ namespace prev {
 			m_Data.SwapChain->Present(1, 0);
 		else
 			m_Data.SwapChain->Present(0, 0);
-
 		return;
 	}
 
 	void DirectXAPI::OnEvent(Event & e) {
-		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(DirectXAPI::WindowSizeChanged));
 	}
 
-	bool DirectXAPI::WindowSizeChanged(WindowResizeEvent & e) {
-		m_Data.Width = e.GetWidth();
-		m_Data.Height = e.GetHeight();
+	void DirectXAPI::SetFullscreen(bool fullscreen) {
+		m_Data.SwapChain->SetFullscreenState(fullscreen, NULL);
+		m_Data.Fullscreen = fullscreen;
+		ChangeWindowResolution(m_Data.CurrentModeDescriptionIndex);
+	}
 
-		m_Data.DeviceContext->OMSetRenderTargets(0, 0, 0);
-		
-		m_Data.RenderTarget = nullptr;
-		m_Data.DepthStencilState = nullptr;
-		m_Data.DepthStencilBuffer = nullptr;
-		m_Data.DepthStencilView = nullptr;
-		m_Data.RasterizerState = nullptr;
+	void DirectXAPI::ChangeResolution(int index) {
+		ChangeWindowResolution(index);
+	}
+
+	std::vector<std::pair<unsigned int, unsigned int>> DirectXAPI::GetSupportedResolution() {
+		std::vector<std::pair<unsigned int, unsigned int>> supportedResolution;
+		for (unsigned int i = 0; i < m_Data.AllDisplayModes.size(); i++) {
+			supportedResolution.push_back(std::make_pair(m_Data.AllDisplayModes[i].Width, m_Data.AllDisplayModes[i].Height));
+		}
+		return supportedResolution;
+	}
+
+	bool DirectXAPI::ChangeWindowResolution(int index) {
+
+		index = index % m_Data.AllDisplayModes.size();
 
 		HRESULT hr;
-		hr = m_Data.SwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+
+		m_Data.CurrentModeDescriptionIndex = index % m_Data.AllDisplayModes.size();
+
+		DXGI_MODE_DESC zeroRefrreshRate = m_Data.AllDisplayModes[m_Data.CurrentModeDescriptionIndex];
+		zeroRefrreshRate.RefreshRate.Numerator = 0;
+		zeroRefrreshRate.RefreshRate.Denominator = 0;
+
+		BOOL isFullscreen = false;
+		m_Data.SwapChain->GetFullscreenState(&isFullscreen, NULL);
+
+		if (m_Data.Fullscreen != isFullscreen) {
+			if (isFullscreen) {
+				hr = m_Data.SwapChain->ResizeTarget(&zeroRefrreshRate);
+				CHECK_AND_POST_ERROR(hr, "Unable to resize target!");
+
+				hr = m_Data.SwapChain->SetFullscreenState(true, NULL);
+				CHECK_AND_POST_ERROR(hr, "Unable to switch to fullscreen mode!");
+			} else {
+				hr = m_Data.SwapChain->SetFullscreenState(true, NULL);
+				CHECK_AND_POST_ERROR(hr, "Unable to switch to windowed mode mode!");
+
+				RECT rect = { 0, 0, m_Data.AllDisplayModes[m_Data.CurrentModeDescriptionIndex].Width, 
+					m_Data.AllDisplayModes[m_Data.CurrentModeDescriptionIndex].Height };
+				BOOL result = AdjustWindowRectEx(&rect, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, NULL, WS_EX_APPWINDOW);
+				CHECK_AND_POST_ERROR(result, "Unable to adjust window rectangle!");
+
+				SetWindowPos(m_Data.HWnd, HWND_TOP, 0, 0, rect.right - rect.left, rect.bottom - rect.top, SWP_NOMOVE);
+
+			}
+
+			m_Data.Fullscreen = !m_Data.Fullscreen;
+
+		}
+
+		hr = m_Data.SwapChain->ResizeTarget(&zeroRefrreshRate);
+		CHECK_AND_POST_ERROR(hr, "Unable to resize target!");
+
+		m_Data.DeviceContext->ClearState();
+		m_Data.RenderTarget			= nullptr;
+		m_Data.DepthStencilBuffer	= nullptr;
+		m_Data.DepthStencilState	= nullptr;
+		m_Data.DepthStencilView		= nullptr;
+		m_Data.RasterizerState		= nullptr;
+
+		hr = m_Data.SwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
+		CHECK_AND_POST_ERROR(hr, "Direct3D was unable to resize the swap chain!");
 
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
 
@@ -99,84 +146,25 @@ namespace prev {
 		hr = m_Data.Device->CreateRenderTargetView(backBuffer.Get(), NULL, m_Data.RenderTarget.GetAddressOf());
 		CHECK_AND_POST_ERROR(hr, "Unable to create render target view");
 
-		D3D11_TEXTURE2D_DESC depthBufferDesc;
-		ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
-
-		depthBufferDesc.ArraySize = 1;
-		depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-		depthBufferDesc.CPUAccessFlags = 0;
-		depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		depthBufferDesc.Width = m_Data.Width;
-		depthBufferDesc.Height = m_Data.Height;
-		depthBufferDesc.MipLevels = 1;
-		depthBufferDesc.MiscFlags = 0;
-		depthBufferDesc.SampleDesc.Count = 1;
-		depthBufferDesc.SampleDesc.Quality = 0;
-		depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-
-		hr = m_Data.Device->CreateTexture2D(&depthBufferDesc, NULL, m_Data.DepthStencilBuffer.GetAddressOf());
+		hr = CreateDepthStencilBuffer(m_Data.AllDisplayModes[m_Data.CurrentModeDescriptionIndex].Width,
+									  m_Data.AllDisplayModes[m_Data.CurrentModeDescriptionIndex].Height);
 		CHECK_AND_POST_ERROR(hr, "Unable to create render depth stencil buffer");
 
-		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-		ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
-
-		depthStencilDesc.DepthEnable = true;
-		depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-		depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
-		depthStencilDesc.StencilEnable = true;
-		depthStencilDesc.StencilReadMask = 0xFF;
-		depthStencilDesc.StencilWriteMask = 0xFF;
-		depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-		depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-		depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-		depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-		hr = m_Data.Device->CreateDepthStencilState(&depthStencilDesc, m_Data.DepthStencilState.GetAddressOf());
+		hr = CreateDepthStencilState();
 		CHECK_AND_POST_ERROR(hr, "Unable to create depth stencil state");
 
-		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
-		ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
-
-		depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-		depthStencilViewDesc.Texture2D.MipSlice = 0;
-
-		hr = m_Data.Device->CreateDepthStencilView(m_Data.DepthStencilBuffer.Get(),
-												   &depthStencilViewDesc, m_Data.DepthStencilView.GetAddressOf());
+		hr = CreateDepthStencilView();
 		CHECK_AND_POST_ERROR(hr, "Unable to create depth stencil view");
 
 		m_Data.DeviceContext->OMSetRenderTargets(1, m_Data.RenderTarget.GetAddressOf(), m_Data.DepthStencilView.Get());
 
-		D3D11_RASTERIZER_DESC rasterDesc;
-		ZeroMemory(&rasterDesc, sizeof(rasterDesc));
-
-		rasterDesc.AntialiasedLineEnable = false;
-		rasterDesc.CullMode = D3D11_CULL_BACK;
-		rasterDesc.DepthBias = 0;
-		rasterDesc.DepthBiasClamp = 0.0f;
-		rasterDesc.DepthClipEnable = true;
-		rasterDesc.FillMode = D3D11_FILL_SOLID;
-		rasterDesc.FrontCounterClockwise = false;
-		rasterDesc.MultisampleEnable = false;
-		rasterDesc.ScissorEnable = false;
-		rasterDesc.SlopeScaledDepthBias = 0.0f;
-
-		hr = m_Data.Device->CreateRasterizerState(&rasterDesc, m_Data.RasterizerState.GetAddressOf());
+		hr = CreateRasterizerState();
 		CHECK_AND_POST_ERROR(hr, "Unable to create rasterizer state");
 
 		m_Data.DeviceContext->RSSetState(m_Data.RasterizerState.Get());
 
-		D3D11_VIEWPORT viewport;
-		viewport.Width = (float)m_Data.Width;
-		viewport.Height = (float)m_Data.Height;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
+		D3D11_VIEWPORT viewport = CreateViewport(m_Data.AllDisplayModes[m_Data.CurrentModeDescriptionIndex].Width,
+												 m_Data.AllDisplayModes[m_Data.CurrentModeDescriptionIndex].Height);
 
 		m_Data.DeviceContext->RSSetViewports(1, &viewport);
 
@@ -213,24 +201,18 @@ namespace prev {
 		hr = videoOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, 0, &numModes, outputModes);
 		CHECK_AND_POST_ERROR(hr, "Unable to get primary output display mode list", delete[] outputModes);
 
-		bool found = false;
-
 		for (UINT i = 0; i < numModes; i++) {
-			if (outputModes[i].Width == m_Data.Width) {
-				if (outputModes[i].Height == m_Data.Height) {
-					m_Data.RefreshRate.Numerator = outputModes[i].RefreshRate.Numerator;
-					m_Data.RefreshRate.Denominator = outputModes[i].RefreshRate.Denominator;
-					found = true;
-				}
-			}
+			if (i == 0) { m_Data.AllDisplayModes.push_back(outputModes[i]); continue; }
+			if (m_Data.AllDisplayModes[m_Data.AllDisplayModes.size() - 1].Width == outputModes[i].Width
+				&& m_Data.AllDisplayModes[m_Data.AllDisplayModes.size() - 1].Height == outputModes[i].Height) 
+				continue;
+			else
+				m_Data.AllDisplayModes.push_back(outputModes[i]);
 		}
+
+		m_Data.CurrentModeDescriptionIndex = m_Data.AllDisplayModes.size() - 1;
 
 		delete[] outputModes;
-
-		if (!found) {
-			PV_POST_ERROR("Unable to find display resolution");
-			return false;
-		}
 
 		m_Data.AdapterDesc = std::string(_bstr_t(adapterDesc.Description));
 		m_Data.DedicatedVideoMemory = (UINT)adapterDesc.DedicatedVideoMemory / (1024 * 1024);
@@ -239,12 +221,16 @@ namespace prev {
 	}
 
 	bool DirectXAPI::CreateDeviceAndSwapChain() {
+
+		UINT width = m_Data.AllDisplayModes[m_Data.CurrentModeDescriptionIndex].Width;
+		UINT height = m_Data.AllDisplayModes[m_Data.CurrentModeDescriptionIndex].Height;
+
 		DXGI_SWAP_CHAIN_DESC swapChainDesc;
 		ZeroMemory(&swapChainDesc, sizeof(swapChainDesc));
 
 		swapChainDesc.BufferCount = 2;
-		swapChainDesc.BufferDesc.Width = m_Data.Width;
-		swapChainDesc.BufferDesc.Height = m_Data.Height;
+		swapChainDesc.BufferDesc.Width = width;
+		swapChainDesc.BufferDesc.Height = height;
 		swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 		if (m_Data.Vsync) {
@@ -322,88 +308,108 @@ namespace prev {
 		hr = m_Data.Device->CreateRenderTargetView(backBuffer.Get(), NULL, m_Data.RenderTarget.GetAddressOf());
 		CHECK_AND_POST_ERROR(hr, "Unable to create render target view");
 
-		D3D11_TEXTURE2D_DESC depthBufferDesc;
-		ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
-
-		depthBufferDesc.ArraySize = 1;
-		depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-		depthBufferDesc.CPUAccessFlags = 0;
-		depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		depthBufferDesc.Width = m_Data.Width;
-		depthBufferDesc.Height = m_Data.Height;
-		depthBufferDesc.MipLevels = 1;
-		depthBufferDesc.MiscFlags = 0;
-		depthBufferDesc.SampleDesc.Count = 1;
-		depthBufferDesc.SampleDesc.Quality = 0;
-		depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-
-		hr = m_Data.Device->CreateTexture2D(&depthBufferDesc, NULL, m_Data.DepthStencilBuffer.GetAddressOf());
+		hr = CreateDepthStencilBuffer(width, height);
 		CHECK_AND_POST_ERROR(hr, "Unable to create render depth stencil buffer");
 
-		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-		ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
-
-		depthStencilDesc.DepthEnable = true;
-		depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-		depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
-		depthStencilDesc.StencilEnable = true;
-		depthStencilDesc.StencilReadMask = 0xFF;
-		depthStencilDesc.StencilWriteMask = 0xFF;
-		depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-		depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-		depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-		depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-		hr = m_Data.Device->CreateDepthStencilState(&depthStencilDesc, m_Data.DepthStencilState.GetAddressOf());
+		hr = CreateDepthStencilState();
 		CHECK_AND_POST_ERROR(hr, "Unable to create depth stencil state");
 
-		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
-		ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
-
-		depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-		depthStencilViewDesc.Texture2D.MipSlice = 0;
-
-		hr = m_Data.Device->CreateDepthStencilView(m_Data.DepthStencilBuffer.Get(),
-												  &depthStencilViewDesc, m_Data.DepthStencilView.GetAddressOf());
+		hr = CreateDepthStencilView();
 		CHECK_AND_POST_ERROR(hr, "Unable to create depth stencil view");
 
 		m_Data.DeviceContext->OMSetRenderTargets(1, m_Data.RenderTarget.GetAddressOf(), m_Data.DepthStencilView.Get());
 
-		D3D11_RASTERIZER_DESC rasterDesc;
-		ZeroMemory(&rasterDesc, sizeof(rasterDesc));
-
-		rasterDesc.AntialiasedLineEnable = false;
-		rasterDesc.CullMode = D3D11_CULL_BACK;
-		rasterDesc.DepthBias = 0;
-		rasterDesc.DepthBiasClamp = 0.0f;
-		rasterDesc.DepthClipEnable = true;
-		rasterDesc.FillMode = D3D11_FILL_SOLID;
-		rasterDesc.FrontCounterClockwise = false;
-		rasterDesc.MultisampleEnable = false;
-		rasterDesc.ScissorEnable = false;
-		rasterDesc.SlopeScaledDepthBias = 0.0f;
-
-		hr = m_Data.Device->CreateRasterizerState(&rasterDesc, m_Data.RasterizerState.GetAddressOf());
+		hr = CreateRasterizerState();
 		CHECK_AND_POST_ERROR(hr, "Unable to create rasterizer state");
 
 		m_Data.DeviceContext->RSSetState(m_Data.RasterizerState.Get());
 
-		D3D11_VIEWPORT viewport;
-		viewport.Width = (float)m_Data.Width;
-		viewport.Height = (float)m_Data.Height;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
+		D3D11_VIEWPORT viewport = CreateViewport(width, height);
 
 		m_Data.DeviceContext->RSSetViewports(1, &viewport);
 
 		return true;
+	}
+
+	HRESULT DirectXAPI::CreateDepthStencilBuffer(UINT width, UINT height) {
+		D3D11_TEXTURE2D_DESC depthBufferDesc;
+		ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
+
+		depthBufferDesc.ArraySize			= 1;
+		depthBufferDesc.BindFlags			= D3D11_BIND_DEPTH_STENCIL;
+		depthBufferDesc.CPUAccessFlags		= 0;
+		depthBufferDesc.Format				= DXGI_FORMAT_D24_UNORM_S8_UINT;
+		depthBufferDesc.Width				= width;
+		depthBufferDesc.Height				= height;
+		depthBufferDesc.MipLevels			= 1;
+		depthBufferDesc.MiscFlags			= 0;
+		depthBufferDesc.SampleDesc.Count	= 1;
+		depthBufferDesc.SampleDesc.Quality	= 0;
+		depthBufferDesc.Usage				= D3D11_USAGE_DEFAULT;
+
+		return m_Data.Device->CreateTexture2D(&depthBufferDesc, NULL, m_Data.DepthStencilBuffer.GetAddressOf());
+	}
+
+	HRESULT DirectXAPI::CreateDepthStencilState() {
+		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+		ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
+
+		depthStencilDesc.DepthEnable					= true;
+		depthStencilDesc.DepthWriteMask					= D3D11_DEPTH_WRITE_MASK_ALL;
+		depthStencilDesc.DepthFunc						= D3D11_COMPARISON_LESS;
+		depthStencilDesc.StencilEnable					= true;
+		depthStencilDesc.StencilReadMask				= 0xFF;
+		depthStencilDesc.StencilWriteMask				= 0xFF;
+		depthStencilDesc.FrontFace.StencilFailOp		= D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.FrontFace.StencilDepthFailOp	= D3D11_STENCIL_OP_INCR;
+		depthStencilDesc.FrontFace.StencilPassOp		= D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.FrontFace.StencilFunc			= D3D11_COMPARISON_ALWAYS;
+		depthStencilDesc.BackFace.StencilFailOp			= D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.BackFace.StencilDepthFailOp	= D3D11_STENCIL_OP_DECR;
+		depthStencilDesc.BackFace.StencilPassOp			= D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.BackFace.StencilFunc			= D3D11_COMPARISON_ALWAYS;
+
+		return m_Data.Device->CreateDepthStencilState(&depthStencilDesc, m_Data.DepthStencilState.GetAddressOf());
+	}
+
+	HRESULT DirectXAPI::CreateDepthStencilView() {
+		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+		ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
+
+		depthStencilViewDesc.Format						= DXGI_FORMAT_D24_UNORM_S8_UINT;
+		depthStencilViewDesc.ViewDimension				= D3D11_DSV_DIMENSION_TEXTURE2D;
+		depthStencilViewDesc.Texture2D.MipSlice			= 0;
+
+		return m_Data.Device->CreateDepthStencilView(m_Data.DepthStencilBuffer.Get(), &depthStencilViewDesc, m_Data.DepthStencilView.GetAddressOf());
+	}
+
+	HRESULT DirectXAPI::CreateRasterizerState() {
+		D3D11_RASTERIZER_DESC rasterDesc;
+		ZeroMemory(&rasterDesc, sizeof(rasterDesc));
+
+		rasterDesc.AntialiasedLineEnable	= false;
+		rasterDesc.CullMode					= D3D11_CULL_BACK;
+		rasterDesc.DepthBias				= 0;
+		rasterDesc.DepthBiasClamp			= 0.0f;
+		rasterDesc.DepthClipEnable			= true;
+		rasterDesc.FillMode					= D3D11_FILL_SOLID;
+		rasterDesc.FrontCounterClockwise	= false;
+		rasterDesc.MultisampleEnable		= false;
+		rasterDesc.ScissorEnable			= false;
+		rasterDesc.SlopeScaledDepthBias		= 0.0f;
+
+		return m_Data.Device->CreateRasterizerState(&rasterDesc, m_Data.RasterizerState.GetAddressOf());
+	}
+
+	D3D11_VIEWPORT DirectXAPI::CreateViewport(UINT width, UINT height) {
+		D3D11_VIEWPORT viewport;
+		viewport.Width		= (float)width;
+		viewport.Height		= (float)height;
+		viewport.MinDepth	= 0.0f;
+		viewport.MaxDepth	= 1.0f;
+		viewport.TopLeftX	= 0.0f;
+		viewport.TopLeftY	= 0.0f;
+		return viewport;
 	}
 
 }

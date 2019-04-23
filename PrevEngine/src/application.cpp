@@ -15,7 +15,7 @@ namespace prev {
 	Application::Application() {
 
 		WindowDesc winDesc;
-		s_Window = Window::Create(winDesc, WindowAPI::WINDOWING_API_WIN32);
+		s_Window = Window::Create(winDesc, WindowAPI::WINDOWING_API_GLFW);
 		if (s_Window == nullptr) {
 			IsAppReady = false;
 			return;
@@ -23,7 +23,7 @@ namespace prev {
 
 		GraphicsDesc graphicsDesc(winDesc.Width, winDesc.Height);
 		graphicsDesc.Vsync = false;
-		graphicsDesc.Fullscreen = false;
+		graphicsDesc.Fullscreen = true;
 		s_GraphicsAPI = GraphicsAPI::Create(s_Window->GetRawPointer(), s_Window->m_WindowAPI, graphicsDesc, RenderingAPI::RENDERING_API_DIRECTX);
 		if (s_GraphicsAPI == nullptr) {
 			IsAppReady = false;
@@ -35,30 +35,47 @@ namespace prev {
 
 		IMGUI_CALL(m_ImGuiLayer = new ImGuiLayer(s_Window->m_WindowAPI, s_GraphicsAPI->m_RenderingAPI));
 		IMGUI_CALL(m_LayerStack.PushOverlay(new ImGuiLogger()));
-		
+		IMGUI_CALL(
+
 			auto imguiconsole = new ImGuiConsole(); 
 			m_LayerStack.PushOverlay(imguiconsole);
 			imguiconsole->AddConsoleCommand("exit", "Exit the program", [this](const std::vector<std::string> & cmdParam) -> void {
 				IsAppRunning = false;
 			});
-			imguiconsole->AddConsoleCommand("window_size", "Set window size in real time", [this](const std::vector<std::string> & cmdParam) -> void {
-				if (cmdParam.size() != 3) {
+
+			auto windowSizes = s_GraphicsAPI->GetSupportedResolution();
+			std::stringstream ss;
+			ss << "Set window size in real time\n";
+			ss << "Supported Window Resolution\n";
+			ss << "Use the index to set resolution\n";
+			ss << "---------------------------\n";
+			int i = 1;
+			for (auto & resolution : windowSizes) {
+				ss << i << ") " << resolution.first << ", " << resolution.second << "\n";
+				i++;
+			}
+
+			imguiconsole->AddConsoleCommand("window_size", ss.str().c_str(), [this](const std::vector<std::string> & cmdParam) -> void {
+				if (cmdParam.size() != 2) {
 					return;
 				}
-				int x = std::atoi(cmdParam[1].c_str());
-				int y = std::atoi(cmdParam[2].c_str());
+				int index = std::atoi(cmdParam[1].c_str());
 
-				RECT rc;
-				rc.left = 0;
-				rc.top = 0;
-				rc.right = rc.left + x;
-				rc.bottom = rc.top + y;
-
-				AdjustWindowRectEx(&rc, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, NULL, WS_EX_APPWINDOW);
-
-				SetWindowPos((HWND)s_Window->GetRawPointer(), HWND_TOP, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_SHOWWINDOW);
+				s_GraphicsAPI->ChangeResolution(index);
 			});
-		
+			imguiconsole->AddConsoleCommand("window_fullscreen",
+											"Set window between fullscreen and windowed\n"
+											"------------------------------------------\n"
+											"For Fullscreen use : 1\n"
+											"For Windowed use   : 0\n",
+											[this](const std::vector<std::string> & cmdParam) -> void {
+												if (cmdParam.size() != 2) {
+													return;
+												}
+												bool fullscreen = std::atoi(cmdParam[1].c_str());
+												s_GraphicsAPI->SetFullscreen(fullscreen);
+											});
+		);
 	}
 
 	Application::~Application() {
@@ -99,7 +116,9 @@ namespace prev {
 
 		m_LayerStack.OnEvent(e);
 		m_ImGuiLayer->OnEvent(e);
-		s_GraphicsAPI->OnEvent(e);
+
+		if (e.GetCategoryFlags() & EventCategoryApplication)
+			s_GraphicsAPI->OnEvent(e);
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(Application::WindowCloseFunc));

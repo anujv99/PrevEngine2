@@ -349,7 +349,7 @@ namespace prev {
 	static AppConsole s_Console;
 	static bool s_IsOpen = true;
 
-	ImGuiConsole::ImGuiConsole() {
+	ImGuiConsole::ImGuiConsole() : Layer("IMGUI_CONSOLE_LAYER") {
 	}
 
 	ImGuiConsole::~ImGuiConsole() {

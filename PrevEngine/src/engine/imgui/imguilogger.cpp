@@ -85,7 +85,7 @@ namespace prev {
 	static std::map<LogLevel, ImVec4> m_LogColors;
 	static ImGuiAppLog log;
 
-	ImGuiLogger::ImGuiLogger() {
+	ImGuiLogger::ImGuiLogger() : Layer("IMGUI_LOGGER_LAYER") {
 		{
 			m_LogColors[LogLevel::PV_INFO] = ImVec4(0, 1, 0, 1);
 			m_LogColors[LogLevel::PV_WARN] = ImVec4(1, 1, 0, 1);

@@ -67,6 +67,18 @@ namespace prev {
 		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(OpenGLAPI::WindowSizeChanged));
 	}
 
+	void OpenGLAPI::ChangeResolution(int index) {
+		throw std::logic_error("The method or operation is not implemented.");
+	}
+
+	void OpenGLAPI::SetFullscreen(bool fullscreen) {
+		throw std::logic_error("The method or operation is not implemented.");
+	}
+
+	std::vector<std::pair<unsigned int, unsigned int>> OpenGLAPI::GetSupportedResolution() {
+		throw std::logic_error("The method or operation is not implemented.");
+	}
+
 	bool OpenGLAPI::WindowSizeChanged(WindowResizeEvent & e) {
 		m_Data.Width = e.GetWidth();
 		m_Data.Height = e.GetHeight();
